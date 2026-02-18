@@ -15,3 +15,10 @@ RUN comfy model download --url https://huggingface.co/black-forest-labs/FLUX.1-s
 
 # copy all input data (like images or videos) into comfyui (uncomment and adjust if needed)
 # COPY input/ /comfyui/input/
+
+# copy handler and workflow files
+COPY handler.py /handler.py
+COPY example_workflow.json /comfyui/example_workflow.json
+
+# Start ComfyUI server in the background and then start the RunPod serverless handler
+CMD ["sh", "-c", "python -m comfyui.server --listen 0.0.0.0 --port 8188 & python /handler.py"]
