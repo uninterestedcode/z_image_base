@@ -14,6 +14,8 @@ import base64
 import copy
 import random
 import logging
+import signal
+import sys
 from io import BytesIO
 from typing import Dict, List, Optional, Any
 
@@ -29,7 +31,7 @@ COMFYUI_API_URL = os.getenv("COMFYUI_API_URL", "http://127.0.0.1:8188")
 MAX_RETRIES = 3
 POLL_INTERVAL = 1
 JOB_TIMEOUT = 300
-WORKFLOW_FILE = "example_workflow.json"
+WORKFLOW_FILE = "/comfyui/example_workflow.json"
 
 # Subgraph node ID for Z-Image
 SUBGRAPH_NODE_ID = "9b9009e4-2d3d-445f-9be5-6063f465757e"
@@ -463,6 +465,12 @@ def handler(event: Dict) -> Dict:
     }
 
 
+def handle_shutdown(signum, frame):
+    """Handle graceful shutdown signals."""
+    logger.info(f"Received shutdown signal {signum}, gracefully terminating...")
+    sys.exit(0)
+
+
 if __name__ == "__main__":
     print("Starting RunPod serverless handler for Z-Image ComfyUI...")
     print(f"ComfyUI API URL: {COMFYUI_API_URL}")
@@ -476,6 +484,10 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Warning: Failed to load default workflow: {e}")
         print("Handler will require workflow in each request")
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, handle_shutdown)
+    signal.signal(signal.SIGTERM, handle_shutdown)
     
     # Start RunPod serverless handler
     runpod.serverless.start({"handler": handler})

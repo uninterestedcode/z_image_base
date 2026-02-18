@@ -13,12 +13,18 @@ RUN comfy model download --url https://huggingface.co/Comfy-Org/z_image/blob/mai
 RUN comfy model download --url https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/text_encoders/qwen_3_4b.safetensors --relative-path models/text_encoders --filename qwen_3_4b.safetensors
 RUN comfy model download --url https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors --relative-path models/vae --filename ae.safetensors
 
+# Copy and install Python requirements
+COPY requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.txt
+
 # copy all input data (like images or videos) into comfyui (uncomment and adjust if needed)
 # COPY input/ /comfyui/input/
 
 # copy handler and workflow files
 COPY handler.py /handler.py
 COPY example_workflow.json /comfyui/example_workflow.json
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Start ComfyUI server in the background and then start the RunPod serverless handler
-CMD ["sh", "-c", "python -m comfyui.server --listen 0.0.0.0 --port 8188 & python /handler.py"]
+CMD ["/start.sh"]
