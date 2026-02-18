@@ -2,7 +2,8 @@
 set -e
 
 echo "Starting ComfyUI server..."
-python -m comfyui.server --listen 0.0.0.0 --port 8188 &
+cd /comfyui
+python main.py --listen 0.0.0.0 --port 8188 &
 
 echo "Waiting for ComfyUI to be ready..."
 MAX_WAIT=60
