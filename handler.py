@@ -19,6 +19,19 @@ import sys
 from io import BytesIO
 from typing import Dict, List, Optional, Any
 
+# Unbuffered stdout - flush after every write to ensure logs appear immediately
+class Unbuffered:
+    def __init__(self, stream):
+        self.stream = stream
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+    def flush(self):
+        self.stream.flush()
+
+sys.stdout = Unbuffered(sys.stdout)
+sys.stderr = Unbuffered(sys.stderr)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -472,12 +485,16 @@ def handle_shutdown(signum, frame):
 
 
 # Startup code - executed when module is imported (required for RunPod handler detection)
+print("=== HANDLER.PY LOADING ===")
 print("Starting RunPod serverless handler for Z-Image ComfyUI...")
 print(f"ComfyUI API URL: {COMFYUI_API_URL}")
 print(f"Job timeout: {JOB_TIMEOUT}s")
 print(f"Poll interval: {POLL_INTERVAL}s")
+print(f"Working directory: {os.getcwd()}")
+print(f"Python version: {sys.version}")
 
 # Load default workflow on startup
+print("=== LOADING DEFAULT WORKFLOW ===")
 try:
     load_default_workflow()
     print("Default workflow loaded successfully")
@@ -492,4 +509,12 @@ signal.signal(signal.SIGTERM, handle_shutdown)
 # Start RunPod serverless handler
 # This call must be at module level (not inside if __name__ == "__main__")
 # for RunPod's GitHub scanner to detect it
-runpod.serverless.start({"handler": handler})
+print("=== STARTING RUNPOD SERVERLESS ===")
+print("About to call runpod.serverless.start()")
+try:
+    runpod.serverless.start({"handler": handler})
+    print("runpod.serverless.start() returned (should not happen in serverless mode)")
+except Exception as e:
+    print(f"Error starting RunPod serverless: {e}")
+    import traceback
+    traceback.print_exc()
