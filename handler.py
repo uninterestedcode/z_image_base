@@ -471,23 +471,25 @@ def handle_shutdown(signum, frame):
     sys.exit(0)
 
 
-if __name__ == "__main__":
-    print("Starting RunPod serverless handler for Z-Image ComfyUI...")
-    print(f"ComfyUI API URL: {COMFYUI_API_URL}")
-    print(f"Job timeout: {JOB_TIMEOUT}s")
-    print(f"Poll interval: {POLL_INTERVAL}s")
-    
-    # Load default workflow on startup
-    try:
-        load_default_workflow()
-        print("Default workflow loaded successfully")
-    except Exception as e:
-        print(f"Warning: Failed to load default workflow: {e}")
-        print("Handler will require workflow in each request")
-    
-    # Register signal handlers for graceful shutdown
-    signal.signal(signal.SIGINT, handle_shutdown)
-    signal.signal(signal.SIGTERM, handle_shutdown)
-    
-    # Start RunPod serverless handler
-    runpod.serverless.start({"handler": handler})
+# Startup code - executed when module is imported (required for RunPod handler detection)
+print("Starting RunPod serverless handler for Z-Image ComfyUI...")
+print(f"ComfyUI API URL: {COMFYUI_API_URL}")
+print(f"Job timeout: {JOB_TIMEOUT}s")
+print(f"Poll interval: {POLL_INTERVAL}s")
+
+# Load default workflow on startup
+try:
+    load_default_workflow()
+    print("Default workflow loaded successfully")
+except Exception as e:
+    print(f"Warning: Failed to load default workflow: {e}")
+    print("Handler will require workflow in each request")
+
+# Register signal handlers for graceful shutdown
+signal.signal(signal.SIGINT, handle_shutdown)
+signal.signal(signal.SIGTERM, handle_shutdown)
+
+# Start RunPod serverless handler
+# This call must be at module level (not inside if __name__ == "__main__")
+# for RunPod's GitHub scanner to detect it
+runpod.serverless.start({"handler": handler})
